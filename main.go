@@ -5,7 +5,8 @@ import (
 )
 
 func main() {
-	mux := initMux()
+	cfg := initapiConfig()
+	mux := initMux(cfg)
 
 	srv := &http.Server{
 		Handler: mux,
