@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"sync/atomic"
 )
@@ -31,6 +32,15 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
+
+	})
+
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		numHits := cfg.fileserverHits.Load()
+		printedHits := fmt.Sprintf("Hits: %d", numHits)
+		w.Write([]byte(printedHits))
 
 	})
 
