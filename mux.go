@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -55,6 +56,30 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		cfg.fileserverHits.Store(0)
 		w.Write([]byte("hit count reset!"))
+	})
+
+	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
+		type chirp struct {
+			Body string `json:"body"`
+		}
+
+		type returnVal struct {
+			Valid bool `json:"valid"`
+		}
+
+		type returnErr struct {
+			Error string `json:"error"`
+		}
+
+		decoder := json.NewDecoder(req.Body)
+		defer req.Body.Close()
+		newChirp := chirp{}
+		err := decoder.Decode(&newChirp)
+		if err != nil {
+			fmt.Printf("error decoding chirp: %s\n", err)
+			w.WriteHeader(500)
+		}
+
 	})
 
 	return mux
