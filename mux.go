@@ -30,14 +30,14 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot)))))
 	mux.Handle("/app/assets/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot)))))
 
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("GET /api/healthz", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 
 	})
 
-	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("GET /api/metrics", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		numHits := cfg.fileserverHits.Load()
@@ -45,7 +45,7 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 		w.Write([]byte(printedHits))
 	})
 
-	mux.HandleFunc("POST /reset", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("POST /api/reset", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		cfg.fileserverHits.Store(0)
