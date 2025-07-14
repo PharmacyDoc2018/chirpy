@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"sync/atomic"
 )
@@ -37,17 +38,21 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 
 	})
 
-	mux.HandleFunc("GET /api/metrics", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		numHits := cfg.fileserverHits.Load()
-		printedHits := fmt.Sprintf("Hits: %d", numHits)
-		w.Write([]byte(printedHits))
+	mux.HandleFunc("GET /admin/metrics/", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		tmpl := template.Must(template.ParseFiles("./admin/metrics/index.html"))
+		err := tmpl.Execute(w, struct {
+			Hits int32
+		}{
+			Hits: cfg.fileserverHits.Load(),
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
 	})
 
-	mux.HandleFunc("POST /api/reset", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
 		cfg.fileserverHits.Store(0)
 		w.Write([]byte("hit count reset!"))
 	})
