@@ -71,13 +71,52 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 			Error string `json:"error"`
 		}
 
-		decoder := json.NewDecoder(req.Body)
+		genericErrorReturn := returnErr{
+			Error: "Something went wrong",
+		}
+
+		tooLongErrorReturn := returnErr{
+			Error: "Chirp is too long",
+		}
+
+		goodReturn := returnVal{
+			Valid: true,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		decoder := json.NewDecoder(req.Body) // Decode Request
 		defer req.Body.Close()
 		newChirp := chirp{}
 		err := decoder.Decode(&newChirp)
 		if err != nil {
 			fmt.Printf("error decoding chirp: %s\n", err)
 			w.WriteHeader(500)
+			data, err := json.Marshal(genericErrorReturn)
+			if err != nil {
+				fmt.Println(err)
+			}
+			w.Write(data)
+		}
+
+		lenChirp := len(newChirp.Body) // Encode Response
+		if lenChirp > 140 {            // If chirp is too long
+			data, err := json.Marshal(tooLongErrorReturn)
+			if err != nil {
+				w.WriteHeader(500)
+				fmt.Println(err)
+			}
+			w.WriteHeader(400)
+			w.Write(data)
+
+		} else { // If chirp is good
+			data, err := json.Marshal(goodReturn)
+			if err != nil {
+				w.WriteHeader(500)
+				fmt.Println(err)
+			}
+			w.WriteHeader(200)
+			w.Write(data)
 		}
 
 	})
