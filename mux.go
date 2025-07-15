@@ -73,6 +73,7 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 				fmt.Println(err)
 			}
 			w.Write(data)
+			return
 		}
 
 		lenChirp := len(newChirp.Body) // Encode Response
@@ -81,6 +82,7 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 			if err != nil {
 				w.WriteHeader(500)
 				fmt.Println(err)
+				return
 			}
 			w.WriteHeader(400)
 			w.Write(data)
@@ -91,6 +93,7 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 			if err != nil {
 				w.WriteHeader(500)
 				fmt.Println(err)
+				return
 			}
 			w.WriteHeader(200)
 			w.Write(data)

@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 func isCurse(word string) bool {
 	curses := []string{
@@ -9,13 +12,7 @@ func isCurse(word string) bool {
 		"fornax",
 	}
 
-	for _, curse := range curses {
-		if strings.ToLower(word) == curse {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(curses, strings.ToLower(word))
 }
 
 func filterProfanity(dirtyChirp string) string {
