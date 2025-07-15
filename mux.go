@@ -5,22 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"sync/atomic"
 )
 
 const filepathRoot = "."
 const port = "8080"
-
-type apiConfig struct {
-	fileserverHits atomic.Int32
-}
-
-func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits.Add(1)
-		next.ServeHTTP(w, r)
-	})
-}
 
 func initapiConfig() *apiConfig {
 	var cfg apiConfig
@@ -59,18 +47,6 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 	})
 
 	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
-		type chirp struct {
-			Body string `json:"body"`
-		}
-
-		type returnVal struct {
-			Valid bool `json:"valid"`
-		}
-
-		type returnErr struct {
-			Error string `json:"error"`
-		}
-
 		genericErrorReturn := returnErr{
 			Error: "Something went wrong",
 		}
@@ -109,7 +85,8 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 			w.WriteHeader(400)
 			w.Write(data)
 
-		} else { // If chirp is good
+		} else { // If chirp is not too long
+			goodReturn.CleanedBody = filterProfanity(newChirp.Body) // Clean up the profanity
 			data, err := json.Marshal(goodReturn)
 			if err != nil {
 				w.WriteHeader(500)
