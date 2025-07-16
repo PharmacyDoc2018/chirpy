@@ -1,9 +1,30 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
+	"os"
 	"slices"
 	"strings"
+
+	"github.com/PharmacyDoc2018/chirpy/internal/database"
+	"github.com/joho/godotenv"
 )
+
+func initapiConfig() *apiConfig {
+	var cfg apiConfig
+
+	godotenv.Load()
+	dbURL := os.Getenv("DB_URL")
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		fmt.Println(err)
+	}
+	cfg.db = database.New(db)
+
+	return &cfg
+}
 
 func isCurse(word string) bool {
 	curses := []string{

@@ -10,11 +10,6 @@ import (
 const filepathRoot = "."
 const port = "8080"
 
-func initapiConfig() *apiConfig {
-	var cfg apiConfig
-	return &cfg
-}
-
 func initMux(cfg *apiConfig) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(filepathRoot)))))
