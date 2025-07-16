@@ -1,4 +1,4 @@
 assets/
-chirpy.env
+.env
 chirpy
 out
