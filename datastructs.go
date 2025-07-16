@@ -10,8 +10,9 @@ import (
 )
 
 type apiConfig struct {
-	fileserverHits atomic.Int32
+	platfrom       string
 	db             *database.Queries
+	fileserverHits atomic.Int32
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {

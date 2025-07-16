@@ -40,9 +40,22 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 	})
 
 	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		if cfg.platfrom != "dev" {
+			w.WriteHeader(403)
+			w.Write([]byte("403 Forbidden"))
+			return
+		}
+
+		err := cfg.db.ResetUsers(req.Context())
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+
 		cfg.fileserverHits.Store(0)
-		w.Write([]byte("hit count reset!"))
+
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write([]byte("hit count and users reset!"))
 	})
 
 	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
@@ -158,7 +171,7 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 			w.WriteHeader(500)
 			return
 		}
-		w.WriteHeader(200)
+		w.WriteHeader(201)
 		w.Write(data)
 	})
 
