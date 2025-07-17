@@ -78,13 +78,34 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 
 		filterProfanity(newChirp)
 
-		data, err := json.Marshal(goodReturn)
+		chirpParams := database.CreateChirpParams{
+			ID:        uuid.New(),
+			CreatedAt: time.Now(),
+			Body:      newChirp.Body,
+			UserID:    newChirp.UserId,
+		}
+
+		storedChirp, err := cfg.db.CreateChirp(req.Context(), chirpParams)
 		if err != nil {
 			w.WriteHeader(500)
-			fmt.Println(err)
 			return
 		}
-		w.WriteHeader(200)
+
+		returnedChirp := chirpResponse{
+			Id:        storedChirp.ID,
+			CreatedAt: storedChirp.CreatedAt,
+			UpdatedAt: storedChirp.UpdatedAt,
+			Body:      storedChirp.Body,
+			UserId:    storedChirp.UserID,
+		}
+
+		data, err := json.Marshal(returnedChirp)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+
+		w.WriteHeader(201)
 		w.Write(data)
 
 	})
