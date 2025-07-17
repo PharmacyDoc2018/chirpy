@@ -58,58 +58,34 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 		w.Write([]byte("hit count and users reset!"))
 	})
 
-	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
-		genericErrorReturn := returnErr{
-			Error: "Something went wrong",
-		}
-
-		tooLongErrorReturn := returnErr{
-			Error: "Chirp is too long",
-		}
-
-		goodReturn := returnVal{
-			Valid: true,
-		}
-
+	mux.HandleFunc("POST /api/chirps", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		decoder := json.NewDecoder(req.Body) // Decode Request
-		defer req.Body.Close()
-		newChirp := chirp{}
-		err := decoder.Decode(&newChirp)
-		if err != nil {
-			fmt.Printf("error decoding chirp: %s\n", err)
-			w.WriteHeader(500)
-			data, err := json.Marshal(genericErrorReturn)
-			if err != nil {
-				fmt.Println(err)
-			}
-			w.Write(data)
+		newChirp, decodeErr := decodeChirp(req)
+		if decodeErr != nil {
+			fmt.Println(decodeErr.err)
+			w.WriteHeader(400)
+			w.Write(decodeErr.writtenErr)
 			return
 		}
 
-		lenChirp := len(newChirp.Body) // Encode Response
-		if lenChirp > 140 {            // If chirp is too long
-			data, err := json.Marshal(tooLongErrorReturn)
-			if err != nil {
-				w.WriteHeader(500)
-				fmt.Println(err)
-				return
-			}
+		if ok, err := validateChirpLength(newChirp); !ok {
+			fmt.Println(err.err)
 			w.WriteHeader(400)
-			w.Write(data)
-
-		} else { // If chirp is not too long
-			goodReturn.CleanedBody = filterProfanity(newChirp.Body) // Clean up the profanity
-			data, err := json.Marshal(goodReturn)
-			if err != nil {
-				w.WriteHeader(500)
-				fmt.Println(err)
-				return
-			}
-			w.WriteHeader(200)
-			w.Write(data)
+			w.Write(err.writtenErr)
+			return
 		}
+
+		filterProfanity(newChirp)
+
+		data, err := json.Marshal(goodReturn)
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Println(err)
+			return
+		}
+		w.WriteHeader(200)
+		w.Write(data)
 
 	})
 

@@ -9,6 +9,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const maxChirpLength = 140
+
 type apiConfig struct {
 	platfrom       string
 	db             *database.Queries
@@ -23,10 +25,16 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 type chirp struct {
-	Body string `json:"body"`
+	Body   string    `json:"body"`
+	UserId uuid.UUID `json:"user_id"`
 }
 
-type returnVal struct {
+type chirpError struct {
+	err        error
+	writtenErr []byte
+}
+
+type returnValidation struct {
 	Valid       bool   `json:"valid"`
 	CleanedBody string `json:"cleaned_body"`
 }

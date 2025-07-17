@@ -2,7 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"slices"
 	"strings"
@@ -29,6 +32,46 @@ func initapiConfig() *apiConfig {
 	return &cfg
 }
 
+func decodeChirp(req *http.Request) (*chirp, *chirpError) {
+	genericErrorWritten, err := json.Marshal(returnErr{Error: "something went wrong"})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	returnedChirp := chirp{}
+	returnedDecodeError := chirpError{}
+
+	decoder := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+	err = decoder.Decode(&returnedChirp)
+	if err != nil {
+		returnedDecodeError.err = err
+		returnedDecodeError.writtenErr = genericErrorWritten
+		return &returnedChirp, &returnedDecodeError
+	}
+
+	return &returnedChirp, nil
+}
+
+func validateChirpLength(c *chirp) (bool, *chirpError) {
+	const tooLongErrorMsg = "chirp is too long"
+	tooLongErrorWritten, err := json.Marshal(returnErr{Error: tooLongErrorMsg})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	returnErr := chirpError{
+		err:        errors.New(tooLongErrorMsg),
+		writtenErr: tooLongErrorWritten,
+	}
+
+	if len(c.Body) > maxChirpLength {
+		return false, &returnErr
+	}
+
+	return true, nil
+}
+
 func isCurse(word string) bool {
 	curses := []string{
 		"kerfuffle",
@@ -39,11 +82,11 @@ func isCurse(word string) bool {
 	return slices.Contains(curses, strings.ToLower(word))
 }
 
-func filterProfanity(dirtyChirp string) string {
-	censoredWord := "****"
+func filterProfanity(c *chirp) *chirp {
+	const censoredWord = "****"
 
 	cleanChirpSplit := []string{}
-	dirtyChirpSplit := strings.Split(dirtyChirp, " ")
+	dirtyChirpSplit := strings.Split(c.Body, " ")
 	for _, word := range dirtyChirpSplit {
 		if isCurse(word) {
 			cleanChirpSplit = append(cleanChirpSplit, censoredWord)
@@ -52,6 +95,6 @@ func filterProfanity(dirtyChirp string) string {
 		}
 	}
 	cleanChirp := strings.Join(cleanChirpSplit, " ")
-
-	return cleanChirp
+	c.Body = cleanChirp
+	return c
 }
