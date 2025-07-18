@@ -42,11 +42,6 @@ type chirpError struct {
 	writtenErr []byte
 }
 
-type returnValidation struct {
-	Valid       bool   `json:"valid"`
-	CleanedBody string `json:"cleaned_body"`
-}
-
 type returnErr struct {
 	Error string `json:"error"`
 }
