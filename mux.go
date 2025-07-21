@@ -53,8 +53,8 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 		w.Write([]byte("hit count and users reset!"))
 	})
 
+	handleLogin(mux, cfg)
 	handleResourseChirps(mux, cfg)
-
 	handleResourceUsers(mux, cfg)
 
 	return mux

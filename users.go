@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PharmacyDoc2018/chirpy/internal/auth"
 	"github.com/PharmacyDoc2018/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -19,13 +20,13 @@ func handleResourceUsers(mux *http.ServeMux, cfg *apiConfig) {
 
 		w.Header().Set("Content-Type", "application/json")
 
-		newUserReq := newUserRequest{}
+		newUserReq := loginRequest{}
 		decoder := json.NewDecoder(req.Body)
 		defer req.Body.Close()
 		err := decoder.Decode(&newUserReq)
 		if err != nil {
-			fmt.Printf("error decoding email: %s\n", err)
-			w.WriteHeader(500)
+			fmt.Printf("error decoding login info: %s\n", err)
+			w.WriteHeader(400)
 			data, err := json.Marshal(genericErrorReturn)
 			if err != nil {
 				fmt.Println(err)
@@ -57,7 +58,21 @@ func handleResourceUsers(mux *http.ServeMux, cfg *apiConfig) {
 			return
 		}
 
-		returnedNewUser := newUserResponse{
+		hashedPassword, err := auth.HashPassword(newUserReq.Password)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(400)
+			return
+		}
+
+		updatePassParams := database.UpdatePasswordParams{
+			ID:             newUser.ID,
+			HashedPassword: hashedPassword,
+		}
+
+		cfg.db.UpdatePassword(req.Context(), updatePassParams)
+
+		returnedNewUser := userResponse{
 			ID:        newUser.ID,
 			CreatedAt: newUser.CreatedAt,
 			UpdatedAt: newUser.UpdatedAt,
