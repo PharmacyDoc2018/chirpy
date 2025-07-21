@@ -46,10 +46,6 @@ type returnErr struct {
 	Error string `json:"error"`
 }
 
-type newUserRequest struct {
-	Email string `json:"email"`
-}
-
 type loginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
