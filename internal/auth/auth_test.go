@@ -32,4 +32,11 @@ func TestMakeJWT(t *testing.T) {
 		fmt.Println(err)
 	}
 	fmt.Println(signedToken)
+
+	userID, err := ValidateJWT(signedToken, tokenSecret)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(userID)
 }
