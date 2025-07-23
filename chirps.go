@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PharmacyDoc2018/chirpy/internal/auth"
 	"github.com/PharmacyDoc2018/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -14,6 +15,25 @@ func handleResourseChirps(mux *http.ServeMux, cfg *apiConfig) {
 
 	mux.HandleFunc("POST /api/chirps", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+
+		token, err := auth.GetBearerToken(req.Header)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(401)
+			data, _ := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			w.Write(data)
+		}
+
+		userID, err := auth.ValidateJWT(token, cfg.secret)
+		if err != nil {
+			w.WriteHeader(401)
+			data, _ := json.Marshal(returnErr{
+				Error: "401 Unauthorized",
+			})
+			w.Write(data)
+		}
 
 		newChirp, decodeErr := decodeChirp(req)
 		if decodeErr != nil {
@@ -36,7 +56,7 @@ func handleResourseChirps(mux *http.ServeMux, cfg *apiConfig) {
 			ID:        uuid.New(),
 			CreatedAt: time.Now(),
 			Body:      newChirp.Body,
-			UserID:    newChirp.UserId,
+			UserID:    userID,
 		}
 
 		storedChirp, err := cfg.db.CreateChirp(req.Context(), chirpParams)
