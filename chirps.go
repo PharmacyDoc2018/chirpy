@@ -28,10 +28,11 @@ func handleResourseChirps(mux *http.ServeMux, cfg *apiConfig) {
 
 		userID, err := auth.ValidateJWT(token, cfg.secret)
 		if err != nil {
+			returnError := returnErr{
+				Error: fmt.Sprintf("401 Unauthorized. %s", err),
+			}
 			w.WriteHeader(401)
-			data, _ := json.Marshal(returnErr{
-				Error: "401 Unauthorized",
-			})
+			data, _ := json.Marshal(returnError)
 			w.Write(data)
 		}
 

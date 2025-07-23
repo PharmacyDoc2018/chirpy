@@ -59,7 +59,13 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 			return
 		}
 
-		var expiresIn time.Duration = (min(loginInfo.ExpiresIn, maxTokenLifetime))
+		var expiresIn time.Duration
+		if loginInfo.ExpiresIn == 0 {
+			expiresIn = maxTokenLifetime
+		} else {
+			expiresIn = (min(loginInfo.ExpiresIn, maxTokenLifetime))
+
+		}
 		token, err := auth.MakeJWT(storedUser.ID, cfg.secret, expiresIn)
 		if err != nil {
 			data, err := json.Marshal(returnErr{
