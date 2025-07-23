@@ -10,9 +10,11 @@ import (
 )
 
 const maxChirpLength = 140
+const maxTokenLifetime = 3600 //seconds
 
 type apiConfig struct {
 	platfrom       string
+	secret         string
 	db             *database.Queries
 	fileserverHits atomic.Int32
 }
@@ -47,8 +49,9 @@ type returnErr struct {
 }
 
 type loginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email     string        `json:"email"`
+	Password  string        `json:"password"`
+	ExpiresIn time.Duration `json:"expires_in_seconds,omitempty"`
 }
 
 type userResponse struct {
@@ -56,4 +59,9 @@ type userResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+}
+
+type loginResponse struct {
+	Token string `json:"token"`
+	userResponse
 }

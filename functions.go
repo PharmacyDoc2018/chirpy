@@ -20,8 +20,10 @@ func initapiConfig() *apiConfig {
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
+	secret := os.Getenv("SECRET")
 
 	cfg.platfrom = platform
+	cfg.secret = secret
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {

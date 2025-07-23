@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/PharmacyDoc2018/chirpy/internal/auth"
 )
@@ -45,26 +46,50 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 		err = auth.CheckPasswordHash(loginInfo.Password, storedUser.HashedPassword)
 		if err != nil {
 			fmt.Println(err)
-			w.WriteHeader(401)
 			data, err := json.Marshal(returnErr{
 				Error: "Incorrect email or password",
 			})
 			if err != nil {
 				fmt.Println(err)
+				w.WriteHeader(500)
+				return
 			}
+			w.WriteHeader(401)
 			w.Write(data)
 			return
 		}
 
-		data, err := json.Marshal(userResponse{
+		var expiresIn time.Duration = (min(loginInfo.ExpiresIn, maxTokenLifetime))
+		token, err := auth.MakeJWT(storedUser.ID, cfg.secret, expiresIn)
+		if err != nil {
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(400)
+			w.Write(data)
+			return
+		}
+
+		user := userResponse{
 			ID:        storedUser.ID,
 			CreatedAt: storedUser.CreatedAt,
 			UpdatedAt: storedUser.UpdatedAt,
 			Email:     storedUser.Email,
+		}
+
+		data, err := json.Marshal(loginResponse{
+			Token:        token,
+			userResponse: user,
 		})
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Println(err)
+			return
 		}
 		w.WriteHeader(200)
 		w.Write(data)
