@@ -116,4 +116,64 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 		w.WriteHeader(200)
 		w.Write(data)
 	})
+
+	mux.HandleFunc("POST /api/refresh", func(w http.ResponseWriter, req *http.Request) {
+		refreshToken, err := auth.GetBearerToken(req.Header)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(400)
+			w.Write(data)
+		}
+
+		storedRefreshToken, err := cfg.db.GetRefreshToken(req.Context(), refreshToken)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(401)
+			return
+		}
+
+		if time.Now().After(storedRefreshToken.ExpiresAt) {
+			w.WriteHeader(401)
+			return
+		}
+
+		token, err := auth.MakeJWT(storedRefreshToken.UserID, cfg.secret, maxTokenLifetime)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(401)
+			w.Write(data)
+		}
+
+		data, err := json.Marshal(tokenResponse{
+			Token: token,
+		})
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+		w.WriteHeader(200)
+		w.Write(data)
+
+	})
+
+	mux.HandleFunc("POST /api/revoke", func(w http.ResponseWriter, req *http.Request) {
+		//
+	})
 }

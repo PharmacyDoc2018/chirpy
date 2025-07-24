@@ -65,3 +65,7 @@ type loginResponse struct {
 	RefreshToken string `json:"refresh_token"`
 	userResponse
 }
+
+type tokenResponse struct {
+	Token string `json:"token"`
+}
