@@ -11,6 +11,7 @@ import (
 
 const maxChirpLength = 140
 const maxTokenLifetime time.Duration = 3600 * time.Second
+const maxRefreshTokenLifetime time.Duration = 1440 * time.Hour
 
 type apiConfig struct {
 	platfrom       string
@@ -48,9 +49,8 @@ type returnErr struct {
 }
 
 type loginRequest struct {
-	Email     string        `json:"email"`
-	Password  string        `json:"password"`
-	ExpiresIn time.Duration `json:"expires_in_seconds"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type userResponse struct {
@@ -61,6 +61,7 @@ type userResponse struct {
 }
 
 type loginResponse struct {
-	Token string `json:"token"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 	userResponse
 }

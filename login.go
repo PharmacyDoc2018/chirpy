@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/PharmacyDoc2018/chirpy/internal/auth"
+	"github.com/PharmacyDoc2018/chirpy/internal/database"
 )
 
 func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
@@ -59,14 +60,7 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 			return
 		}
 
-		var expiresIn time.Duration
-		if loginInfo.ExpiresIn == 0 {
-			expiresIn = maxTokenLifetime
-		} else {
-			expiresIn = (min(loginInfo.ExpiresIn, maxTokenLifetime))
-
-		}
-		token, err := auth.MakeJWT(storedUser.ID, cfg.secret, expiresIn)
+		token, err := auth.MakeJWT(storedUser.ID, cfg.secret, maxTokenLifetime)
 		if err != nil {
 			data, err := json.Marshal(returnErr{
 				Error: fmt.Sprint(err),
@@ -81,6 +75,27 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 			return
 		}
 
+		refreshToken, err := auth.MakeRefreshToken()
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		refreshTokenParams := database.CreateRefreshTokenParams{
+			Token:     refreshToken,
+			CreatedAt: time.Now().UTC(),
+			UserID:    storedUser.ID,
+			ExpiresAt: time.Now().UTC().Add(maxRefreshTokenLifetime),
+		}
+
+		_, err = cfg.db.CreateRefreshToken(req.Context(), refreshTokenParams)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
 		user := userResponse{
 			ID:        storedUser.ID,
 			CreatedAt: storedUser.CreatedAt,
@@ -90,6 +105,7 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 
 		data, err := json.Marshal(loginResponse{
 			Token:        token,
+			RefreshToken: refreshToken,
 			userResponse: user,
 		})
 		if err != nil {
