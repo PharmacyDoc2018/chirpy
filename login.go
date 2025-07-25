@@ -174,6 +174,44 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 	})
 
 	mux.HandleFunc("POST /api/revoke", func(w http.ResponseWriter, req *http.Request) {
-		//
+		refreshToken, err := auth.GetBearerToken(req.Header)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(400)
+			w.Write(data)
+			return
+		}
+
+		params := database.RevokeRefreshTokenParams{
+			Token:     refreshToken,
+			ExpiresAt: time.Now(),
+		}
+
+		_, err = cfg.db.RevokeRefreshToken(req.Context(), params)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(400)
+			w.Write(data)
+			return
+		}
+
+		w.WriteHeader(204)
+
 	})
 }
