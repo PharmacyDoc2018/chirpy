@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -145,6 +146,10 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 			return
 		}
 
+		if storedRefreshToken.RevokedAt.Valid {
+			w.WriteHeader(401)
+		}
+
 		token, err := auth.MakeJWT(storedRefreshToken.UserID, cfg.secret, maxTokenLifetime)
 		if err != nil {
 			fmt.Println(err)
@@ -191,8 +196,12 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 		}
 
 		params := database.RevokeRefreshTokenParams{
-			Token:     refreshToken,
-			ExpiresAt: time.Now(),
+			Token: refreshToken,
+			RevokedAt: sql.NullTime{
+				Time:  time.Now().UTC(),
+				Valid: true,
+			},
+			UpdatedAt: time.Now().UTC(),
 		}
 
 		_, err = cfg.db.RevokeRefreshToken(req.Context(), params)

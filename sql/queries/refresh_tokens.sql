@@ -9,7 +9,6 @@ WHERE token = $1;
 
 -- name: RevokeRefreshToken :one
 UPDATE refresh_tokens
-SET expires_at = $2
-AND updated_at = $2
+SET revoked_at = $2, updated_at = $3
 WHERE token = $1
 RETURNING *;
