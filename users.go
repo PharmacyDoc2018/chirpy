@@ -103,6 +103,7 @@ func handleResourceUsers(mux *http.ServeMux, cfg *apiConfig) {
 			}
 			w.WriteHeader(401)
 			w.Write(data)
+			return
 		}
 
 		userID, err := auth.ValidateJWT(token, cfg.secret)

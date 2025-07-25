@@ -74,15 +74,22 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 
 func GetBearerToken(headers http.Header) (string, error) {
 	const authPrefix = "Bearer "
-	authValue := headers.Values("Authorization")[0]
-	if authValue == "" {
-		return "", errors.New("error: authorization headder not found")
+
+	authValues := headers.Values("Authorization")
+	if len(authValues) == 0 {
+		return "", errors.New("error: authorization header not found")
 	}
-	untrimedToken, found := strings.CutPrefix(authValue, authPrefix)
-	if !found {
+
+	authValue := authValues[0]
+	if !strings.HasPrefix(authValue, authPrefix) {
 		return "", errors.New("incorrect authorization header format")
 	}
-	token := strings.TrimSpace(untrimedToken)
+
+	token := strings.TrimSpace(strings.TrimPrefix(authValue, authPrefix))
+	if token == "" {
+		return "", errors.New("authorization token is empty")
+	}
+
 	return token, nil
 }
 
