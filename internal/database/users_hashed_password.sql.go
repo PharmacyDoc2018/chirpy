@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,6 +19,56 @@ WHERE email = $1
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, created_at, updated_at, email, hashed_password FROM users
+WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
+const updateEmailAndPasswordByID = `-- name: UpdateEmailAndPasswordByID :one
+UPDATE users
+SET email = $2, hashed_password = $3, updated_at = $4
+WHERE id = $1
+RETURNING id, created_at, updated_at, email, hashed_password
+`
+
+type UpdateEmailAndPasswordByIDParams struct {
+	ID             uuid.UUID
+	Email          string
+	HashedPassword string
+	UpdatedAt      time.Time
+}
+
+func (q *Queries) UpdateEmailAndPasswordByID(ctx context.Context, arg UpdateEmailAndPasswordByIDParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateEmailAndPasswordByID,
+		arg.ID,
+		arg.Email,
+		arg.HashedPassword,
+		arg.UpdatedAt,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,

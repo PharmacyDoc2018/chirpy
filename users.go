@@ -89,4 +89,93 @@ func handleResourceUsers(mux *http.ServeMux, cfg *apiConfig) {
 		w.Write(data)
 	})
 
+	mux.HandleFunc("PUT /api/users", func(w http.ResponseWriter, req *http.Request) {
+		token, err := auth.GetBearerToken(req.Header)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(401)
+			w.Write(data)
+		}
+
+		userID, err := auth.ValidateJWT(token, cfg.secret)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(401)
+			w.Write(data)
+			return
+		}
+
+		newLogin := loginRequest{}
+		decoder := json.NewDecoder(req.Body)
+		defer req.Body.Close()
+		err = decoder.Decode(&newLogin)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(400)
+			w.Write(data)
+			return
+		}
+
+		newEmail := newLogin.Email
+		newHashedPassword, err := auth.HashPassword(newLogin.Password)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		params := database.UpdateEmailAndPasswordByIDParams{
+			ID:             userID,
+			Email:          newEmail,
+			HashedPassword: newHashedPassword,
+			UpdatedAt:      time.Now(),
+		}
+
+		storedUser, err := cfg.db.UpdateEmailAndPasswordByID(req.Context(), params)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		data, err := json.Marshal(userResponse{
+			ID:        storedUser.ID,
+			CreatedAt: storedUser.CreatedAt,
+			UpdatedAt: storedUser.UpdatedAt,
+			Email:     storedUser.Email,
+		})
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		w.WriteHeader(200)
+		w.Write(data)
+
+	})
 }
