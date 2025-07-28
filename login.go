@@ -13,6 +13,8 @@ import (
 
 func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		loginInfo := loginRequest{}
 		decoder := json.NewDecoder(req.Body)
 		defer req.Body.Close()
@@ -119,6 +121,8 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 	})
 
 	mux.HandleFunc("POST /api/refresh", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		refreshToken, err := auth.GetBearerToken(req.Header)
 		if err != nil {
 			fmt.Println(err)
@@ -179,6 +183,8 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 	})
 
 	mux.HandleFunc("POST /api/revoke", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		refreshToken, err := auth.GetBearerToken(req.Header)
 		if err != nil {
 			fmt.Println(err)

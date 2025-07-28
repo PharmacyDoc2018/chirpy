@@ -156,4 +156,79 @@ func handleResourseChirps(mux *http.ServeMux, cfg *apiConfig) {
 		w.Write(data)
 	})
 
+	mux.HandleFunc("DELETE /api/chirps/{id}", func(w http.ResponseWriter, req *http.Request) {
+		token, err := auth.GetBearerToken(req.Header)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(401)
+			w.Write(data)
+			return
+		}
+
+		userID, err := auth.ValidateJWT(token, cfg.secret)
+		if err != nil {
+			fmt.Println(err)
+			data, err := json.Marshal(returnErr{
+				Error: fmt.Sprint(err),
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(401)
+			w.Write(data)
+			return
+		}
+
+		id, err := uuid.Parse(req.PathValue("id"))
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(400)
+			return
+		}
+		storedChirp, err := cfg.db.GetChirp(req.Context(), id)
+		if err != nil {
+			if fmt.Sprint(err) == "sql: no rows in result set" {
+				w.WriteHeader(404)
+				return
+			} else {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+		}
+
+		if userID != storedChirp.UserID {
+			data, err := json.Marshal(returnErr{
+				Error: "403 Unauthorized",
+			})
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+			w.WriteHeader(403)
+			w.Write(data)
+			return
+		}
+
+		_, err = cfg.db.DeleteChirpByID(req.Context(), storedChirp.ID)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
+		w.WriteHeader(204)
+	})
+
 }

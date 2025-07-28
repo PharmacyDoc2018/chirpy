@@ -90,6 +90,8 @@ func handleResourceUsers(mux *http.ServeMux, cfg *apiConfig) {
 	})
 
 	mux.HandleFunc("PUT /api/users", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		token, err := auth.GetBearerToken(req.Header)
 		if err != nil {
 			fmt.Println(err)
