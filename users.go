@@ -73,10 +73,11 @@ func handleResourceUsers(mux *http.ServeMux, cfg *apiConfig) {
 		cfg.db.UpdatePassword(req.Context(), updatePassParams)
 
 		returnedNewUser := userResponse{
-			ID:        newUser.ID,
-			CreatedAt: newUser.CreatedAt,
-			UpdatedAt: newUser.UpdatedAt,
-			Email:     newUser.Email,
+			ID:          newUser.ID,
+			CreatedAt:   newUser.CreatedAt,
+			UpdatedAt:   newUser.UpdatedAt,
+			Email:       newUser.Email,
+			IsChirpyRed: newUser.IsChirpyRed,
 		}
 
 		data, err := json.Marshal(returnedNewUser)

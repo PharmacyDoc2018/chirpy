@@ -100,10 +100,11 @@ func handleLogin(mux *http.ServeMux, cfg *apiConfig) {
 		}
 
 		user := userResponse{
-			ID:        storedUser.ID,
-			CreatedAt: storedUser.CreatedAt,
-			UpdatedAt: storedUser.UpdatedAt,
-			Email:     storedUser.Email,
+			ID:          storedUser.ID,
+			CreatedAt:   storedUser.CreatedAt,
+			UpdatedAt:   storedUser.UpdatedAt,
+			Email:       storedUser.Email,
+			IsChirpyRed: storedUser.IsChirpyRed,
 		}
 
 		data, err := json.Marshal(loginResponse{
