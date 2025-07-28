@@ -56,6 +56,7 @@ func initMux(cfg *apiConfig) *http.ServeMux {
 	handleLogin(mux, cfg)
 	handleResourseChirps(mux, cfg)
 	handleResourceUsers(mux, cfg)
+	handleWebhooks(mux, cfg)
 
 	return mux
 }

@@ -69,3 +69,10 @@ type loginResponse struct {
 type tokenResponse struct {
 	Token string `json:"token"`
 }
+
+type polkaWebhook struct {
+	Event string `json:"event"`
+	Data  struct {
+		UserId string `json:"user_id"`
+	} `json:"data"`
+}
