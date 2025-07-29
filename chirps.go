@@ -88,11 +88,40 @@ func handleResourseChirps(mux *http.ServeMux, cfg *apiConfig) {
 	mux.HandleFunc("GET /api/chirps", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		storedChirps, err := cfg.db.GetChirps(req.Context())
-		if err != nil {
-			fmt.Println(err)
-			w.WriteHeader(500)
-			return
+		var storedChirps []database.Chirp
+		var err error
+		userIdString := req.URL.Query().Get("author_id")
+		if userIdString == "" {
+			storedChirps, err = cfg.db.GetChirps(req.Context())
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(500)
+				return
+			}
+
+		} else {
+			userID, err := uuid.Parse(userIdString)
+			if err != nil {
+				fmt.Println(err)
+				data, err := json.Marshal(returnErr{
+					Error: fmt.Sprint(err),
+				})
+				if err != nil {
+					fmt.Println(err)
+					w.WriteHeader(500)
+					return
+				}
+				w.WriteHeader(400)
+				w.Write(data)
+			}
+
+			storedChirps, err = cfg.db.GetChirpsByUserID(req.Context(), userID)
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(404)
+				return
+			}
+
 		}
 
 		var returnedChirps []chirpResponse
