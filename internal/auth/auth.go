@@ -72,9 +72,7 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	return userID, nil
 }
 
-func GetBearerToken(headers http.Header) (string, error) {
-	const authPrefix = "Bearer "
-
+func getToken(authPrefix string, headers http.Header) (string, error) {
 	authValues := headers.Values("Authorization")
 	if len(authValues) == 0 {
 		return "", errors.New("error: authorization header not found")
@@ -88,6 +86,24 @@ func GetBearerToken(headers http.Header) (string, error) {
 	token := strings.TrimSpace(strings.TrimPrefix(authValue, authPrefix))
 	if token == "" {
 		return "", errors.New("authorization token is empty")
+	}
+
+	return token, nil
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	token, err := getToken("Bearer", headers)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func GetAPIKey(headers http.Header) (string, error) {
+	token, err := getToken("ApiKey", headers)
+	if err != nil {
+		return "", err
 	}
 
 	return token, nil

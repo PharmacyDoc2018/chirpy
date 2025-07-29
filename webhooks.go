@@ -5,15 +5,28 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/PharmacyDoc2018/chirpy/internal/auth"
 	"github.com/google/uuid"
 )
 
 func handleWebhooks(mux *http.ServeMux, cfg *apiConfig) {
 	mux.HandleFunc("POST /api/polka/webhooks", func(w http.ResponseWriter, req *http.Request) {
+		token, err := auth.GetAPIKey(req.Header)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(401)
+			return
+		}
+
+		if token != cfg.polkaSecret {
+			fmt.Println("incorrect pokla secret in header")
+			w.WriteHeader(401)
+			return
+		}
 		webhook := polkaWebhook{}
 		decoder := json.NewDecoder(req.Body)
 		defer req.Body.Close()
-		err := decoder.Decode(&webhook)
+		err = decoder.Decode(&webhook)
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(400)

@@ -21,9 +21,11 @@ func initapiConfig() *apiConfig {
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
 	secret := os.Getenv("SECRET")
+	polkaSecret := os.Getenv("POLKA_SECRET")
 
 	cfg.platfrom = platform
 	cfg.secret = secret
+	cfg.polkaSecret = polkaSecret
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {

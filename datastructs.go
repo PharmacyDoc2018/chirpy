@@ -16,6 +16,7 @@ const maxRefreshTokenLifetime time.Duration = 1440 * time.Hour
 type apiConfig struct {
 	platfrom       string
 	secret         string
+	polkaSecret    string
 	db             *database.Queries
 	fileserverHits atomic.Int32
 }
