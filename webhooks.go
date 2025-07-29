@@ -20,6 +20,8 @@ func handleWebhooks(mux *http.ServeMux, cfg *apiConfig) {
 
 		if token != cfg.polkaSecret {
 			fmt.Println("incorrect pokla secret in header")
+			fmt.Println("cfg.polkaSecret:", cfg.polkaSecret)
+			fmt.Println("token:", token)
 			w.WriteHeader(401)
 			return
 		}

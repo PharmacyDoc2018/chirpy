@@ -92,7 +92,7 @@ func getToken(authPrefix string, headers http.Header) (string, error) {
 }
 
 func GetBearerToken(headers http.Header) (string, error) {
-	token, err := getToken("Bearer", headers)
+	token, err := getToken("Bearer ", headers)
 	if err != nil {
 		return "", err
 	}
@@ -101,7 +101,7 @@ func GetBearerToken(headers http.Header) (string, error) {
 }
 
 func GetAPIKey(headers http.Header) (string, error) {
-	token, err := getToken("ApiKey", headers)
+	token, err := getToken("ApiKey ", headers)
 	if err != nil {
 		return "", err
 	}
