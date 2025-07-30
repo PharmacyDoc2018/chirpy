@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/PharmacyDoc2018/chirpy/internal/auth"
@@ -133,6 +134,13 @@ func handleResourseChirps(mux *http.ServeMux, cfg *apiConfig) {
 				UpdatedAt: storedChirp.UpdatedAt,
 				Body:      storedChirp.Body,
 				UserId:    storedChirp.UserID,
+			})
+		}
+
+		sortMethod := req.URL.Query().Get("sort")
+		if sortMethod == "desc" {
+			sort.Slice(returnedChirps, func(i, j int) bool {
+				return returnedChirps[i].CreatedAt.After(returnedChirps[j].CreatedAt)
 			})
 		}
 
